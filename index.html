@@ -246,6 +246,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
 <!-- NAV -->
 <div class="nav-tabs">
   <button class="nav-tab active" onclick="showTab('today',this)">Today</button>
+  <button class="nav-tab" onclick="showTab('upcoming',this)">Upcoming</button>
   <button class="nav-tab" onclick="showTab('tasks',this)">All Tasks</button>
   <button class="nav-tab" onclick="showTab('reading',this)">Reading</button>
   <button class="nav-tab" onclick="showTab('routines',this)">Routines</button>
@@ -307,6 +308,15 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
   <!-- TODAY'S TASKS BY CATEGORY -->
   <span class="sec-label">Today's Tasks</span>
   <div id="today-tasks-area"></div>
+</div>
+
+<!-- UPCOMING TAB -->
+<div class="main hidden" id="tab-upcoming">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--ink)">Upcoming <em style="font-style:italic;color:var(--rose)">Tasks</em></div>
+    <button class="btn-save" onclick="openTaskModal()">+ Add Task</button>
+  </div>
+  <div id="upcoming-area"></div>
 </div>
 
 <!-- ALL TASKS TAB -->
@@ -453,6 +463,9 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
   <div class="mobile-nav-inner">
     <button class="mob-btn active" id="mob-today" onclick="mobTab('today',this)">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Today
+    </button>
+    <button class="mob-btn" id="mob-upcoming" onclick="mobTab('upcoming',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>Upcoming
     </button>
     <button class="mob-btn" id="mob-tasks" onclick="mobTab('tasks',this)">
       <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Tasks
@@ -817,14 +830,50 @@ function fetchWeather(){
 function showTab(tab,btn){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  ['tab-today','tab-tasks','tab-reading','tab-routines'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  ['tab-today','tab-upcoming','tab-tasks','tab-reading','tab-routines'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('tab-'+tab).classList.remove('hidden');
+  if(tab==='upcoming')renderUpcoming();
 }
 function mobTab(tab,btn){
   document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  ['tab-today','tab-tasks','tab-reading','tab-routines'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  ['tab-today','tab-upcoming','tab-tasks','tab-reading','tab-routines'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('tab-'+tab).classList.remove('hidden');
+  if(tab==='upcoming')renderUpcoming();
+}
+
+function renderUpcoming(){
+  const area=document.getElementById('upcoming-area');if(!area)return;area.innerHTML='';
+  const withDates=S.tasks.filter(t=>t.due&&!t.done).sort((a,b)=>a.due.localeCompare(b.due));
+  const overdue=withDates.filter(t=>t.due<todayKey);
+  const thisWeek=withDates.filter(t=>{const d=new Date(t.due+'T12:00:00');const now=new Date();const diff=(d-now)/86400000;return t.due>=todayKey&&diff<=7;});
+  const later=withDates.filter(t=>{const d=new Date(t.due+'T12:00:00');const now=new Date();const diff=(d-now)/86400000;return t.due>=todayKey&&diff>7;});
+
+  if(!withDates.length){
+    area.innerHTML='<div style="text-align:center;padding:48px 20px;font-family:\'Cormorant Garamond\',serif;font-size:1.3rem;color:var(--ink-lt);font-style:italic">No upcoming tasks with due dates yet.<br><span style="font-size:0.85rem">Add a due date to any task to see it here.</span></div>';
+    return;
+  }
+
+  function renderGroup(tasks,label,color){
+    if(!tasks.length)return;
+    const sec=document.createElement('div');sec.style.marginBottom='24px';
+    sec.innerHTML=`<div style="font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:${color};margin-bottom:10px">${label}</div>`;
+    const list=document.createElement('div');list.className='task-list';
+    tasks.forEach(t=>{
+      const row=buildTaskRow(t);
+      // Add category badge
+      const badge=document.createElement('span');
+      badge.style.cssText=`font-size:0.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:2px;background:${CATS[t.cat]?.pale||'var(--beige)'};color:${CATS[t.cat]?.color||'var(--ink-lt)'};margin-left:6px;flex-shrink:0`;
+      badge.textContent=CATS[t.cat]?.label||t.cat;
+      row.querySelector('.task-meta')?.appendChild(badge);
+      list.appendChild(row);
+    });
+    sec.appendChild(list);area.appendChild(sec);
+  }
+
+  renderGroup(overdue,'Overdue','#c96a6a');
+  renderGroup(thisWeek,'This Week','var(--rose)');
+  renderGroup(later,'Coming Up','var(--gold)');
 }
 
 /* DARK */
