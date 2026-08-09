@@ -166,6 +166,21 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
 .reading-actions{display:flex;gap:6px;flex-shrink:0}
 .reading-btn{background:none;border:1px solid #c5dce4;border-radius:3px;padding:4px 10px;font-family:'Jost',sans-serif;font-size:0.65rem;color:#5a8fa0;cursor:pointer;transition:all .2s;letter-spacing:.06em;text-transform:uppercase}
 .reading-btn:hover{background:#5a8fa0;color:#fff;border-color:#5a8fa0}
+/* TRAINING CARD */
+.training-card{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:20px 22px;margin-bottom:20px}
+.training-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.training-section-label{font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--label)}
+.training-item{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:3px;background:var(--gold-pale);border-left:3px solid var(--gold);margin-bottom:8px}
+.training-item:last-child{margin-bottom:0}
+.training-time{font-size:0.7rem;font-weight:500;color:var(--gold);white-space:nowrap;min-width:48px;letter-spacing:.04em}
+.training-body{flex:1}
+.training-title{font-size:0.85rem;color:var(--ink);font-weight:500}
+.training-meta{font-size:0.7rem;color:var(--ink-lt);margin-top:2px}
+.training-del{background:none;border:none;cursor:pointer;color:var(--border);font-size:0.78rem;opacity:0;transition:all .2s;flex-shrink:0}
+.training-item:hover .training-del{opacity:1}
+.training-del:hover{color:var(--rose)}
+.training-empty{font-size:0.75rem;color:var(--ink-lt);font-style:italic;padding:4px 0}
+
 
 /* SECTION LABEL */
 .sec-label{font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin-bottom:14px;margin-top:8px;display:block}
@@ -248,7 +263,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
   <button class="nav-tab active" onclick="showTab('today',this)">Today</button>
   <button class="nav-tab" onclick="showTab('upcoming',this)">Upcoming</button>
   <button class="nav-tab" onclick="showTab('tasks',this)">All Tasks</button>
-  <button class="nav-tab" onclick="showTab('reading',this)">Reading</button>
+  <button class="nav-tab" onclick="showTab('reading',this)">Learning</button>
   <button class="nav-tab" onclick="showTab('routines',this)">Routines</button>
 </div>
 
@@ -336,9 +351,12 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
 <!-- READING TAB -->
 <div class="main hidden" id="tab-reading">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--ink)">My <em style="font-style:italic;color:var(--rose)">Reading</em></div>
-    <button class="btn-save" onclick="openBookModal()">+ Add Book</button>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--ink)">My <em style="font-style:italic;color:var(--rose)">Learning</em></div>
+    <div style="display:flex;gap:8px"><button class="btn-save" onclick="openTrainingModal()">+ Add Training</button><button class="btn-save" onclick="openBookModal()">+ Add Book</button></div>
   </div>
+  <div style="margin-bottom:8px"><div style="font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px">🎓 Trainings &amp; Webinars</div><button class="routine-add" style="color:var(--gold)" onclick="openTrainingModal()">+ Add Training</button></div>
+  <div id="training-section" style="margin-bottom:28px"></div>
+  <div style="font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#5a8fa0;margin-bottom:12px">📚 Reading List</div>
   <div id="reading-area"></div>
 </div>
 
@@ -411,6 +429,24 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
   </div>
 </div>
 
+
+<!-- TRAINING MODAL -->
+<div class="overlay hidden" id="training-modal">
+  <div class="modal">
+    <div class="modal-title">Add Training / Webinar</div>
+    <div class="mf"><label>Title</label><input type="text" id="tr-title" placeholder="What is it?"></div>
+    <div class="mf"><label>Date</label><input type="date" id="tr-date"></div>
+    <div class="mf"><label>Time</label><input type="time" id="tr-time"></div>
+    <div class="mf"><label>Host / Speaker (optional)</label><input type="text" id="tr-host" placeholder="Who's leading it?"></div>
+    <div class="mf"><label>Platform / Link (optional)</label><input type="text" id="tr-link" placeholder="Zoom, Teams, URL…"></div>
+    <div class="mf"><label>Notes (optional)</label><textarea id="tr-notes" placeholder="What do you need to prepare?"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('training-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveTraining()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- BOOK MODAL -->
 <div class="overlay hidden" id="book-modal">
   <div class="modal">
@@ -471,7 +507,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
       <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Tasks
     </button>
     <button class="mob-btn" id="mob-reading" onclick="mobTab('reading',this)">
-      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Reading
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Learning
     </button>
     <button class="mob-btn" id="mob-routines" onclick="mobTab('routines',this)">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Routines
@@ -492,7 +528,7 @@ const CATS={
 };
 const PRI={high:{label:'High',cls:'pri-high'},med:{label:'Medium',cls:'pri-med'},low:{label:'Low',cls:'pri-low'}};
 
-let S={tasks:[],appointments:[],reminders:[],books:[],morning:[],evening:[],routineChecks:{},dark:false};
+let S={tasks:[],appointments:[],reminders:[],books:[],trainings:[],morning:[],evening:[],routineChecks:{},dark:false};
 let editingTaskId=null,editingBookId=null,addingRoutine=null,todayKey='';
 
 function gl(k){try{return localStorage.getItem('kdc1_'+k)}catch(e){return null}}
@@ -516,6 +552,7 @@ function save(){sl('data',S)}
   ];
   if(!S.reminders)S.reminders=[];
   if(!S.books)S.books=[];
+  if(!S.trainings)S.trainings=[];
   if(!S.routineChecks)S.routineChecks={};
 
   todayKey=new Date().toISOString().split('T')[0];
@@ -546,7 +583,7 @@ function cleanOldChecks(){
 function renderAll(){
   renderRoutine('morning');renderRoutine('evening');
   renderAppointments();renderReminders();
-  renderTodayTasks();renderAllTasks();renderBooks();
+  renderTodayTasks();renderAllTasks();renderBooks();renderTrainings();
   renderRoutineFull('morning');renderRoutineFull('evening');
 }
 
@@ -639,6 +676,60 @@ function saveAppt(){
   save();renderAppointments();closeModal('appt-modal');toast('Appointment saved ✦');
 }
 function deleteAppt(id){S.appointments=S.appointments.filter(a=>a.id!==id);save();renderAppointments();}
+
+/* TRAININGS */
+function renderTrainings(){
+  // Today card
+  const listToday=document.getElementById('training-list-today');
+  const emptyToday=document.getElementById('training-empty-today');
+  if(listToday){
+    listToday.innerHTML='';
+    const todays=S.trainings.filter(t=>t.date===todayKey).sort((a,b)=>a.time.localeCompare(b.time));
+    if(!todays.length){if(emptyToday)emptyToday.classList.remove('hidden');}
+    else{
+      if(emptyToday)emptyToday.classList.add('hidden');
+      todays.forEach(t=>{listToday.appendChild(buildTrainingRow(t));});
+    }
+  }
+  // Learning tab section
+  const area=document.getElementById('training-section');
+  if(!area)return;area.innerHTML='';
+  if(!S.trainings.length){area.innerHTML='<div class="training-empty">No trainings yet — add a webinar or course.</div>';return;}
+  const upcoming=S.trainings.filter(t=>t.date>=todayKey).sort((a,b)=>a.date===b.date?a.time.localeCompare(b.time):a.date.localeCompare(b.date));
+  const past=S.trainings.filter(t=>t.date<todayKey).sort((a,b)=>b.date.localeCompare(a.date));
+  function renderGroup(items,label){
+    if(!items.length)return;
+    const hdr=document.createElement('div');
+    hdr.style.cssText='font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;margin-top:16px';
+    hdr.textContent=label;
+    area.appendChild(hdr);
+    items.forEach(t=>{area.appendChild(buildTrainingRow(t));});
+  }
+  renderGroup(upcoming,'Upcoming');
+  renderGroup(past,'Past');
+}
+function buildTrainingRow(t){
+  const row=document.createElement('div');row.className='training-item';
+  const time=t.time?formatTime(t.time):'';
+  const dateStr=t.date?formatDate(t.date):'';
+  const meta=([dateStr,t.host,t.link].filter(Boolean).join(' · '));
+  row.innerHTML=`<span class="training-time">${time||dateStr}</span><div class="training-body"><div class="training-title">${esc(t.title)}</div>${meta?`<div class="training-meta">${esc(meta)}</div>`:''}</div><button class="training-del" onclick="deleteTraining('${t.id}')">×</button>`;
+  return row;
+}
+function openTrainingModal(){
+  document.getElementById('tr-title').value='';document.getElementById('tr-date').value=todayKey;
+  document.getElementById('tr-time').value='';document.getElementById('tr-host').value='';
+  document.getElementById('tr-link').value='';document.getElementById('tr-notes').value='';
+  document.getElementById('training-modal').classList.remove('hidden');
+}
+function saveTraining(){
+  const title=document.getElementById('tr-title').value.trim();if(!title){toast('Please add a title');return;}
+  S.trainings.push({id:'tr'+Date.now(),title,date:document.getElementById('tr-date').value,time:document.getElementById('tr-time').value,host:document.getElementById('tr-host').value.trim(),link:document.getElementById('tr-link').value.trim(),notes:document.getElementById('tr-notes').value.trim()});
+  save();renderTrainings();closeModal('training-modal');toast('Training saved ✦');
+}
+function deleteTraining(id){S.trainings=S.trainings.filter(t=>t.id!==id);save();renderTrainings();}
+
+
 
 /* REMINDERS */
 function renderReminders(){
@@ -844,6 +935,14 @@ function mobTab(tab,btn){
 
 function renderUpcoming(){
   const area=document.getElementById('upcoming-area');if(!area)return;area.innerHTML='';
+  // Upcoming trainings section
+  const upcomingTrainings=S.trainings.filter(t=>t.date>=todayKey).sort((a,b)=>a.date===b.date?a.time.localeCompare(b.time):a.date.localeCompare(b.date));
+  if(upcomingTrainings.length){
+    const sec=document.createElement('div');sec.style.marginBottom='28px';
+    sec.innerHTML='<div style="font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">🎓 Upcoming Trainings</div>';
+    upcomingTrainings.forEach(t=>{sec.appendChild(buildTrainingRow(t));});
+    area.appendChild(sec);
+  }
   const withDates=S.tasks.filter(t=>t.due&&!t.done).sort((a,b)=>a.due.localeCompare(b.due));
   const overdue=withDates.filter(t=>t.due<todayKey);
   const thisWeek=withDates.filter(t=>{const d=new Date(t.due+'T12:00:00');const now=new Date();const diff=(d-now)/86400000;return t.due>=todayKey&&diff<=7;});
