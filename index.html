@@ -324,7 +324,10 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
   <span class="sec-label">Reminders</span>
   <div class="remind-card" style="margin-bottom:24px">
     <div class="remind-list" id="remind-list"></div>
-    <button class="card-add" style="color:var(--gold);padding-top:8px" onclick="addReminder()">+ Add reminder</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px">
+      <button class="card-add" style="color:var(--gold);padding-top:0" onclick="addReminder()">+ Add reminder</button>
+      <button class="card-add" style="color:var(--ink-lt);padding-top:0" onclick="clearDoneReminders()">Clear done</button>
+    </div>
   </div>
 
   <!-- TODAY'S TASKS -->
@@ -897,6 +900,10 @@ function renderReminders(){
   });
 }
 function addReminder(){document.getElementById('r-text').value='';document.getElementById('remind-modal').classList.remove('hidden');}
+function clearDoneReminders(){
+  S.reminders=S.reminders.filter(r=>!r.done);
+  save(); renderReminders(); toast('Done reminders cleared ✦');
+}
 function saveReminder(){
   const t=document.getElementById('r-text').value.trim(); if(!t)return;
   if(!S.reminders) S.reminders=[];
