@@ -50,7 +50,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
 .hdr-btn{background:none;border:none;padding:0;font-family:'Jost',sans-serif;font-size:0.68rem;color:var(--ink-lt);cursor:pointer;transition:color .2s;letter-spacing:.06em}
 .hdr-btn:hover{color:var(--rose)}
 .hdr-sep{color:var(--border);font-size:0.7rem}
-.weather-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;color:var(--ink-lt);background:var(--beige);padding:3px 10px;border-radius:20px}
+.weather-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;color:var(--ink-lt);background:var(--beige);padding:3px 12px;border-radius:20px;flex-wrap:wrap;justify-content:center}
 
 /* NAV */
 .nav-tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 32px;overflow-x:auto}
@@ -1215,14 +1215,37 @@ function suggestScripture(){
 function fetchWeather(){
   if(!navigator.geolocation)return;
   navigator.geolocation.getCurrentPosition(pos=>{
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true&temperature_unit=fahrenheit`)
+    const lat=pos.coords.latitude, lon=pos.coords.longitude;
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&temperature_unit=fahrenheit&timezone=auto&forecast_days=1`)
       .then(r=>r.json()).then(d=>{
         if(!d.current_weather)return;
         const code=d.current_weather.weathercode;
         const icon=code===0?'☀️':code<=2?'⛅':code<=3?'☁️':code<=48?'🌫️':code<=67?'🌧️':code<=77?'🌨️':code<=82?'🌦️':'⛈️';
         const cond=code===0?'Clear':code<=2?'Partly Cloudy':code<=3?'Cloudy':code<=48?'Foggy':code<=67?'Rainy':code<=77?'Snowy':code<=82?'Showers':'Thunderstorm';
+        const curr=Math.round(d.current_weather.temperature);
+
+        // High / Low from daily data
+        let hiLo='';
+        if(d.daily&&d.daily.temperature_2m_max&&d.daily.temperature_2m_min){
+          const hi=Math.round(d.daily.temperature_2m_max[0]);
+          const lo=Math.round(d.daily.temperature_2m_min[0]);
+          hiLo=` · H:${hi}° L:${lo}°`;
+        }
+
+        // Precipitation warning
+        let precip='';
+        if(d.daily&&d.daily.precipitation_probability_max){
+          const pct=d.daily.precipitation_probability_max[0];
+          if(pct>=70){
+            const isStorm=code>=95;
+            precip=isStorm?' · ⛈ Storms likely':' · 🌧 Rain likely';
+          } else if(pct>=40){
+            precip=' · 🌦 Rain possible';
+          }
+        }
+
         document.getElementById('w-icon').textContent=icon;
-        document.getElementById('w-text').textContent=Math.round(d.current_weather.temperature)+'° '+cond;
+        document.getElementById('w-text').textContent=`${curr}° ${cond}${hiLo}${precip}`;
         document.getElementById('weather-badge').classList.remove('hidden');
       }).catch(()=>{});
   },()=>{});
