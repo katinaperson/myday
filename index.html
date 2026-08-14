@@ -246,6 +246,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
   .hdr-btn{font-size:0.62rem}
   .main{padding:20px 14px 80px}
   .scripture-strip{padding:10px 16px}
+  #tab-braindump .today-grid, #tab-braindump [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
 }
 </style>
 </head>
@@ -373,38 +374,48 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--ink);min-hei
 
 <!-- BRAIN DUMP TAB -->
 <div class="main hidden" id="tab-braindump">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
     <div>
       <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--ink)">Brain <em style="font-style:italic;color:var(--rose)">Dump</em></div>
       <div style="font-size:0.72rem;color:var(--ink-lt);margin-top:4px;font-style:italic">A safe place for everything until you know where it belongs.</div>
     </div>
-    <button class="btn-cancel" onclick="clearDoneDumps()">Clear Done</button>
   </div>
 
-  <div class="dump-filters" style="margin-top:16px">
-    <button class="dump-filter active" onclick="filterDump('all',this)">All</button>
-    <button class="dump-filter" onclick="filterDump('idea',this)">Ideas</button>
-    <button class="dump-filter" onclick="filterDump('task',this)">Tasks</button>
-    <button class="dump-filter" onclick="filterDump('worry',this)">Worries</button>
-    <button class="dump-filter" onclick="filterDump('prayer',this)">Prayer</button>
-    <button class="dump-filter" onclick="filterDump('note',this)">Notes</button>
-  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 
-  <div class="brain-dump-area">
-    <div class="brain-dump-list" id="dump-list"></div>
-    <div class="dump-input-row">
-      <textarea class="dump-input" id="dump-input" placeholder="Type anything — ideas, worries, tasks you haven't placed yet, random thoughts…" rows="2" onkeydown="dumpKeydown(event)"></textarea>
-      <div style="display:flex;flex-direction:column;gap:6px;align-self:flex-end">
-        <select id="dump-tag-select" style="font-family:'Jost',sans-serif;font-size:0.68rem;background:var(--beige);border:none;border-radius:3px;padding:6px 10px;color:var(--ink-lt);outline:none;cursor:pointer">
-          <option value="note">Note</option>
-          <option value="idea">Idea</option>
-          <option value="task">Task</option>
-          <option value="worry">Worry</option>
-          <option value="prayer">Prayer</option>
-        </select>
-        <button class="dump-submit" onclick="addDumpItem()">Dump it</button>
+    <!-- LEFT: CHECKLIST -->
+    <div>
+      <div style="font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin-bottom:12px">✓ Checklist</div>
+      <div class="brain-dump-area">
+        <div id="dump-check-list"></div>
+        <div class="dump-input-row">
+          <input type="text" class="dump-input" id="dump-check-input" placeholder="Add something to do…" style="min-height:unset" onkeydown="if(event.key==='Enter')addCheckItem()">
+          <button class="dump-submit" onclick="addCheckItem()">Add</button>
+        </div>
       </div>
+      <button style="background:none;border:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:0.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lt);margin-top:8px;transition:color .2s" onmouseover="this.style.color='var(--rose)'" onmouseout="this.style.color='var(--ink-lt)'" onclick="clearDoneChecks()">Clear done</button>
     </div>
+
+    <!-- RIGHT: QUICK NOTES -->
+    <div>
+      <div style="font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin-bottom:12px">✦ Quick Notes</div>
+      <div class="brain-dump-area">
+        <div id="dump-notes-list"></div>
+        <div class="dump-input-row">
+          <textarea class="dump-input" id="dump-notes-input" placeholder="Ideas, prayers, anything…" rows="2" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))addDumpNote()"></textarea>
+          <div style="display:flex;flex-direction:column;gap:6px;align-self:flex-end">
+            <select id="dump-tag-select" style="font-family:'Jost',sans-serif;font-size:0.68rem;background:var(--beige);border:none;border-radius:3px;padding:6px 10px;color:var(--ink-lt);outline:none;cursor:pointer">
+              <option value="note">Note</option>
+              <option value="idea">Idea</option>
+              <option value="prayer">Prayer</option>
+            </select>
+            <button class="dump-submit" onclick="addDumpNote()">Dump it</button>
+          </div>
+        </div>
+      </div>
+      <button style="background:none;border:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:0.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lt);margin-top:8px;transition:color .2s" onmouseover="this.style.color='var(--rose)'" onmouseout="this.style.color='var(--ink-lt)'" onclick="clearAllNotes()">Clear all notes</button>
+    </div>
+
   </div>
 </div>
 
@@ -634,7 +645,7 @@ const DUMP_TAGS = {
   note:   {label:'Note',   bg:'#EDF5F8', color:'#5a8fa0'},
   idea:   {label:'Idea',   bg:'#F5EEFF', color:'#8B5ABF'},
   task:   {label:'Task',   bg:'#EEF4FF', color:'#4A7FC1'},
-  worry:  {label:'Worry',  bg:'#FEF0E8', color:'#E07B4A'},
+  reminder:{label:'Reminder',bg:'#FEF0E8', color:'#E07B4A'},
   prayer: {label:'Prayer', bg:'#F5EBE9', color:'#C4879A'}
 };
 const MONTHLY_SCRIPTURES = [
@@ -854,14 +865,14 @@ function renderTrainings(){
   if(!(S.trainings||[]).length){area.innerHTML='<div style="font-size:0.75rem;color:var(--ink-lt);font-style:italic;padding:4px 0">No trainings yet — add a webinar or course.</div>';return;}
   const upcoming=S.trainings.filter(t=>t.date>=todayKey).sort((a,b)=>a.date===b.date?a.time.localeCompare(b.time):a.date.localeCompare(b.date));
   const past=S.trainings.filter(t=>t.date<todayKey).sort((a,b)=>b.date.localeCompare(a.date));
-  function renderGroup(items,label){
+  function renderTrainingGroup(items,label){
     if(!items.length)return;
     const hdr=document.createElement('div');
     hdr.style.cssText='font-size:0.62rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;margin-top:12px';
     hdr.textContent=label; area.appendChild(hdr);
     items.forEach(t=>area.appendChild(buildTrainingRow(t)));
   }
-  renderGroup(upcoming,'Upcoming'); renderGroup(past,'Past');
+  renderTrainingGroup(upcoming,'Upcoming'); renderTrainingGroup(past,'Past');
 }
 function buildTrainingRow(t){
   const row=document.createElement('div'); row.className='training-item';
@@ -1142,56 +1153,83 @@ function saveBook(){
 }
 function deleteBook(id){if(!confirm('Remove this book?'))return;S.books=S.books.filter(x=>x.id!==id);save();renderBooks();}
 
+
 // ─── BRAIN DUMP ───────────────────────────────────────────────────────────────
-function renderBrainDump(){
-  const list=document.getElementById('dump-list'); if(!list)return;
+function renderBrainDump(){renderCheckList();renderDumpNotes();}
+
+function renderCheckList(){
+  const list=document.getElementById('dump-check-list'); if(!list)return;
   list.innerHTML='';
-  const items=(S.braindump||[]).filter(d=>dumpFilter==='all'||d.tag===dumpFilter);
-  if(!items.length){
-    list.innerHTML='<div class="dump-empty">Nothing here yet — just start typing and dump it.</div>';
-    return;
-  }
-  items.forEach((d,i)=>{
+  const items=(S.braindump||[]).filter(d=>d.section==='check');
+  if(!items.length){list.innerHTML='<div class="dump-empty">Nothing to check off yet.</div>';return;}
+  items.forEach(d=>{
     const row=document.createElement('div'); row.className='dump-item';
-    const tagInfo=DUMP_TAGS[d.tag]||DUMP_TAGS.note;
-    const textEl=document.createElement('div'); textEl.className='dump-text'; textEl.textContent=d.text;
-    textEl.onclick=()=>{const t=prompt('Edit:',d.text);if(t!==null&&t.trim()){const idx=S.braindump.findIndex(x=>x.id===d.id);if(idx>-1){S.braindump[idx].text=t.trim();save();renderBrainDump();}}};
-    const tag=document.createElement('span'); tag.className='dump-tag';
-    tag.style.cssText=`background:${tagInfo.bg};color:${tagInfo.color}`;
-    tag.textContent=tagInfo.label;
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.className='routine-cb'; cb.checked=!!d.done;
+    cb.style.cssText='flex-shrink:0;margin-top:2px';
+    cb.onchange=()=>{const idx=S.braindump.findIndex(x=>x.id===d.id);if(idx>-1){S.braindump[idx].done=cb.checked;save();renderCheckList();}};
+    const textEl=document.createElement('div'); textEl.className='dump-text'; textEl.style.cssText='flex:1'+(d.done?';text-decoration:line-through;color:var(--ink-lt)':'');
+    textEl.textContent=d.text;
+    textEl.onclick=()=>{const t=prompt('Edit:',d.text);if(t!==null&&t.trim()){const idx=S.braindump.findIndex(x=>x.id===d.id);if(idx>-1){S.braindump[idx].text=t.trim();save();renderCheckList();}}};
     const actions=document.createElement('div'); actions.className='dump-actions';
-    // Move to task
     const toTask=document.createElement('button'); toTask.className='dump-action-btn'; toTask.textContent='→ Task';
     toTask.onclick=()=>{
-      if(!S.tasks) S.tasks=[];
+      if(!S.tasks)S.tasks=[];
       S.tasks.unshift({id:'t'+Date.now(),title:d.text,cat:'personal',due:'',pri:'med',notes:'',done:false});
       S.braindump=S.braindump.filter(x=>x.id!==d.id);
-      save(); renderBrainDump(); renderTodayTasks(); renderAllTasks(); toast('Moved to Tasks ✦');
+      save();renderCheckList();renderTodayTasks();renderAllTasks();toast('Moved to Tasks ✦');
     };
     const del=document.createElement('button'); del.className='dump-del'; del.textContent='×';
-    del.onclick=()=>{S.braindump=S.braindump.filter(x=>x.id!==d.id);save();renderBrainDump();};
-    actions.appendChild(toTask); actions.appendChild(del);
-    row.appendChild(textEl); row.appendChild(tag); row.appendChild(actions);
+    del.onclick=()=>{S.braindump=S.braindump.filter(x=>x.id!==d.id);save();renderCheckList();};
+    actions.appendChild(toTask);actions.appendChild(del);
+    row.appendChild(cb);row.appendChild(textEl);row.appendChild(actions);
     list.appendChild(row);
   });
 }
-function addDumpItem(){
-  const input=document.getElementById('dump-input');
+
+function renderDumpNotes(){
+  const list=document.getElementById('dump-notes-list'); if(!list)return;
+  list.innerHTML='';
+  const items=(S.braindump||[]).filter(d=>d.section==='note');
+  if(!items.length){list.innerHTML='<div class="dump-empty">Nothing here yet — just dump it.</div>';return;}
+  items.forEach(d=>{
+    const tagInfo=DUMP_TAGS[d.tag]||DUMP_TAGS.note;
+    const row=document.createElement('div'); row.className='dump-item';
+    const textEl=document.createElement('div'); textEl.className='dump-text'; textEl.style.cssText='flex:1';
+    textEl.textContent=d.text;
+    textEl.onclick=()=>{const t=prompt('Edit:',d.text);if(t!==null&&t.trim()){const idx=S.braindump.findIndex(x=>x.id===d.id);if(idx>-1){S.braindump[idx].text=t.trim();save();renderDumpNotes();}}};
+    const tag=document.createElement('span'); tag.className='dump-tag';
+    tag.style.cssText=`background:${tagInfo.bg};color:${tagInfo.color}`;
+    tag.textContent=tagInfo.label;
+    const del=document.createElement('button'); del.className='dump-del'; del.textContent='×';
+    del.onclick=()=>{S.braindump=S.braindump.filter(x=>x.id!==d.id);save();renderDumpNotes();};
+    row.appendChild(textEl);row.appendChild(tag);row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+function addCheckItem(){
+  const input=document.getElementById('dump-check-input');
+  const text=input.value.trim(); if(!text)return;
+  if(!S.braindump)S.braindump=[];
+  S.braindump.unshift({id:'d'+Date.now(),text,section:'check',done:false,created:todayKey});
+  input.value='';save();renderCheckList();
+}
+function addDumpNote(){
+  const input=document.getElementById('dump-notes-input');
   const text=input.value.trim(); if(!text)return;
   const tag=document.getElementById('dump-tag-select').value;
-  if(!S.braindump) S.braindump=[];
-  S.braindump.unshift({id:'d'+Date.now(),text,tag,done:false,created:todayKey});
-  input.value=''; save(); renderBrainDump();
+  if(!S.braindump)S.braindump=[];
+  S.braindump.unshift({id:'d'+Date.now(),text,section:'note',tag,created:todayKey});
+  input.value='';save();renderDumpNotes();
 }
-function dumpKeydown(e){if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){addDumpItem();}}
-function filterDump(f,btn){
-  dumpFilter=f;
-  document.querySelectorAll('.dump-filter').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderBrainDump();
+function clearDoneChecks(){
+  S.braindump=S.braindump.filter(d=>!(d.section==='check'&&d.done));
+  save();renderCheckList();toast('Done items cleared ✦');
 }
-function clearDoneDumps(){
-  if(!confirm('Clear all brain dump items?'))return;
-  S.braindump=[]; save(); renderBrainDump(); toast('Brain dump cleared ✦');
+function clearAllNotes(){
+  if(!confirm('Clear all quick notes?'))return;
+  S.braindump=S.braindump.filter(d=>d.section!=='note');
+  save();renderDumpNotes();toast('Notes cleared ✦');
 }
 
 // ─── SCRIPTURE ────────────────────────────────────────────────────────────────
